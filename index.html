@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Plurai Concept · Gaurav Basantani</title>
+<meta name="description" content="Check the passage before you accept the fix: in a Plurai simulation report, a proposed fix would make a made-up airline's agent refuse a refund, because the fare rules document the eval grades against is older than the US refund rule. An unofficial concept by Gaurav Basantani.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* One screen, one moment: an engineer at a made-up airline opens the Gaps stage of a Plurai
+   simulation report. The top gap says the support agent "promises a cash refund" that the fare rules
+   don't allow, and a fix is ready. The eval grades the agent against fare-rules.md, the airline's own
+   help-center page, which predates the 2024 US refund rule. Plurai did what its docs say (the corpus
+   built from your documents is the ground truth); the bad input is the old page. The concept adds one
+   card next to the fix: check the passage before you accept. */
+:root{
+  --bg:#f3f3f1; --page-ink:#121212; --page-muted:#5c5c58; --page-line:#d8d8d3;
+  --ok:#1f7a3f; --bad:#b42318;
+  /* the report window: light like Plurai's report in light mode */
+  --w-bg:#ffffff; --w-2:#f6f6f5; --w-line:#e5e5e2; --w-ink:#141414; --w-muted:#5f6368; --w-dim:#80858a;
+  --high:#a3243f; --med:#c0623a; --sq-line:#b9bcc0;
+  --suite-bg:#e8f0fb; --suite-ink:#2a5a95; --run-bg:#e9f5ea; --run-ink:#2f6a35;
+  --fix:#8a3fd1; --fix-soft:#f6effd;
+  --card-bg:#fff8e6; --card-line:#e9c46a; --card-k:#8a5a00; --card-ink:#2b2414;
+  --res-bg:#fdecec; --res-line:#f0b4ae; --res-ink:#8f1d14;
+  --chip-bg:#f1f1ef; --chip-line:#d6d6d2;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0b0b0c; --page-ink:#f1f1ef; --page-muted:#a5a5a0; --page-line:#2b2b2a; --ok:#6fd394; --bad:#ff8a80;
+  --w-bg:#141516; --w-2:#1b1c1e; --w-line:#2c2e31; --w-ink:#ececec; --w-muted:#a7abb0; --w-dim:#8b9095;
+  --high:#f07a92; --med:#f09a6e; --sq-line:#4a4e53;
+  --suite-bg:#17263a; --suite-ink:#9cc3f5; --run-bg:#16291a; --run-ink:#8fd49a;
+  --fix:#c39bf5; --fix-soft:#241a31;
+  --card-bg:#2a2210; --card-line:#6b5420; --card-k:#e9c46a; --card-ink:#f3ead6;
+  --res-bg:#341614; --res-line:#6e2a25; --res-ink:#ffb4ab;
+  --chip-bg:#232427; --chip-line:#3a3c40; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b0b0c; --page-ink:#f1f1ef; --page-muted:#a5a5a0; --page-line:#2b2b2a; --ok:#6fd394; --bad:#ff8a80;
+  --w-bg:#141516; --w-2:#1b1c1e; --w-line:#2c2e31; --w-ink:#ececec; --w-muted:#a7abb0; --w-dim:#8b9095;
+  --high:#f07a92; --med:#f09a6e; --sq-line:#4a4e53;
+  --suite-bg:#17263a; --suite-ink:#9cc3f5; --run-bg:#16291a; --run-ink:#8fd49a;
+  --fix:#c39bf5; --fix-soft:#241a31;
+  --card-bg:#2a2210; --card-line:#6b5420; --card-k:#e9c46a; --card-ink:#f3ead6;
+  --res-bg:#341614; --res-line:#6e2a25; --res-ink:#ffb4ab;
+  --chip-bg:#232427; --chip-line:#3a3c40; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--page-ink);font:15px/1.45 var(--sans);padding:18px max(16px,env(safe-area-inset-right,0px)) 26px max(16px,env(safe-area-inset-left,0px))}
+p,h1,h2,h3,h4,h5,ul{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+code{font:500 .86em var(--mono);white-space:nowrap}
+.page{max-width:1180px;margin:0 auto;display:grid;gap:14px}
+.head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,450px);gap:10px 40px;align-items:end}
+.eyebrow{font-size:.8rem;color:var(--page-muted);margin-bottom:4px}
+h1{font:600 clamp(1.45rem,3vw,2rem)/1.12 var(--sans);letter-spacing:-.02em}
+.sub{color:var(--page-muted);font-size:.95rem;margin-top:6px;max-width:60ch}
+.now{border-left:3px solid var(--page-line);padding:2px 0 2px 13px;display:grid;gap:3px;min-height:44px}
+.now.bad{border-color:var(--bad)}
+.now.ok{border-color:var(--ok)}
+.now b{font-weight:600}
+.now.bad b{color:var(--bad)}
+.now.ok b{color:var(--ok)}
+.now span{color:var(--page-muted);font-size:.9rem}
+/* report window */
+.window{background:var(--w-bg);color:var(--w-ink);border:1px solid var(--w-line);border-radius:12px;overflow:hidden}
+.bar{display:flex;align-items:center;gap:10px;padding:9px 20px;border-bottom:1px solid var(--w-line);font-size:.78rem;color:var(--w-muted);cursor:default;min-width:0}
+.bar .path{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .path b{color:var(--w-ink);font-weight:500}
+.bar .who{margin-left:auto;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.av{width:22px;height:22px;border-radius:50%;background:#dfe8f3;display:inline-grid;place-items:center;font:600 .58rem var(--sans);font-style:normal;color:#2a4a72;flex:none}
+.stages{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:0 20px;cursor:default}
+.st{border-top:3px solid var(--w-ink);padding:8px 10px 9px;font-size:.84rem;display:grid;gap:1px}
+.st.skip{border-top-color:var(--sq-line)}
+.st.on{background:var(--w-2);border-radius:0 0 8px 8px}
+.st b{font-weight:500;display:flex;align-items:center;gap:7px}
+.st b:before{content:"";width:13px;height:13px;border-radius:50%;background:var(--w-ink);flex:none;-webkit-mask:radial-gradient(circle,#000 0 100%);}
+.st.skip b:before{background:var(--w-dim)}
+.st span{font-size:.74rem;color:var(--w-muted)}
+.body{padding:14px 20px 16px;display:grid;gap:10px}
+.sec h2{font:600 1.25rem/1.2 var(--sans);letter-spacing:-.01em}
+.sec p{font-size:.84rem;color:var(--w-muted);margin-top:3px}
+.thead,.row{display:grid;grid-template-columns:96px minmax(0,1fr) 230px 120px;gap:14px;align-items:start}
+.thead{font:500 .68rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--w-muted);border-bottom:1px solid var(--w-line);padding-bottom:7px;cursor:default}
+.row{padding:12px 0;border-bottom:1px solid var(--w-line);cursor:default}
+.sev{font:500 .74rem var(--mono);letter-spacing:.06em;display:flex;align-items:center;gap:7px;padding-top:2px}
+.sev.h{color:var(--high)}
+.sev.m{color:var(--med)}
+.sev.h:before{content:"";border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid var(--high)}
+.sev.m:before{content:"";width:10px;height:10px;border-radius:50%;background:var(--med)}
+.gt{font-size:.98rem;font-weight:500;line-height:1.35}
+.gs{font-size:.84rem;color:var(--w-muted);margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.ch{font:500 .72rem var(--sans);border-radius:5px;padding:2px 8px;white-space:nowrap}
+.ch.s{background:var(--suite-bg);color:var(--suite-ink)}
+.ch.r{background:var(--run-bg);color:var(--run-ink)}
+.ch.r:before{content:"✓ "}
+.fixline{display:flex;gap:9px;align-items:flex-start;margin-top:9px;font-size:.86rem}
+.pill{flex:none;font:500 .76rem var(--sans);color:var(--fix);border:1.5px solid var(--fix);border-radius:999px;padding:1px 9px;background:var(--fix-soft);white-space:nowrap}
+.pill:before{content:"✦ "}
+.hits{display:flex;align-items:center;gap:8px;font:400 .74rem var(--mono);color:var(--w-muted);white-space:nowrap;padding-top:2px}
+.sq{display:flex;gap:3px}
+.sq i{width:13px;height:13px;border:1px solid var(--sq-line);border-radius:2px}
+.sq i.f{background:var(--high);border-color:var(--high)}
+.sq i.fm{background:var(--med);border-color:var(--med)}
+.where{font:400 .74rem var(--mono);color:var(--w-muted);padding-top:2px}
+.more{grid-column:2/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:14px 20px;margin-top:2px;align-items:start}
+.det{display:grid;gap:9px;min-width:0;cursor:default}
+.lab{font:500 .66rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--w-muted);margin-bottom:3px}
+.scn{font-size:.84rem}
+.scn small{display:block;color:var(--w-muted);font-size:.8rem}
+.turn{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;font-size:.84rem;line-height:1.4;padding:3px 0}
+.turn em{font:400 .7rem var(--mono);font-style:normal;color:var(--w-dim);padding-top:2px}
+.turn b{font-weight:500;font-size:.74rem;color:var(--w-muted);display:block}
+.turn.hit p{background:var(--w-2);border-radius:6px;padding:3px 7px;margin-left:-7px;box-shadow:inset 2px 0 0 var(--high)}
+.exp{border:1px solid var(--w-line);border-radius:8px;padding:8px 10px;font-size:.84rem;background:var(--w-2)}
+.exp .src{font:400 .74rem var(--mono);color:var(--w-muted);display:block;margin-bottom:3px;overflow-wrap:anywhere}
+/* the concept card */
+.card{border:1px solid var(--card-line);background:var(--card-bg);color:var(--card-ink);border-radius:10px;padding:11px 13px;display:grid;gap:8px;min-width:0}
+.card .k{font:500 .66rem var(--mono);color:var(--card-k);letter-spacing:.07em;text-transform:uppercase}
+.card h4{font:600 .98rem/1.3 var(--sans)}
+.card p{font-size:.85rem}
+.card .why{border-left:2px solid var(--card-line);padding-left:9px}
+.card .why b{font-weight:600}
+.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:500 .84rem var(--sans);border-radius:8px;padding:6px 14px;border:1px solid var(--chip-line);background:var(--w-bg);color:var(--w-ink);min-height:38px}
+.btn.fixb{border:1.5px solid var(--fix);color:var(--fix);background:var(--fix-soft)}
+.btn.primary{background:var(--w-ink);border-color:var(--w-ink);color:var(--w-bg)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:focus-visible,.wf button:focus-visible{outline:2px solid var(--fix);outline-offset:2px}
+.form{border:1px solid var(--chip-line);border-radius:8px;padding:10px 12px;display:grid;gap:8px;background:var(--w-bg);color:var(--w-ink)}
+.form label,.form .fl{font:500 .76rem var(--sans);color:var(--w-muted)}
+.form textarea{font:400 .86rem/1.4 var(--sans);color:var(--w-ink);background:var(--w-bg);border:1px solid var(--chip-line);border-radius:6px;padding:8px 10px;resize:vertical;min-height:62px;width:100%}
+.form textarea:focus-visible{outline:2px solid var(--fix);outline-offset:1px}
+.hint{font-size:.72rem;color:var(--w-dim)}
+.chiprow{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;font:500 .76rem var(--sans);border:1px solid var(--chip-line);background:var(--chip-bg);border-radius:6px;padding:3px 9px;color:var(--w-ink)}
+.res{border:1px solid var(--res-line);background:var(--res-bg);border-radius:8px;padding:9px 11px;display:grid;gap:6px;font-size:.84rem}
+.res h5{font:600 .86rem var(--sans);color:var(--res-ink)}
+.res p{color:var(--card-ink)}
+.wf{display:flex;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--w-line);font-size:.74rem;color:var(--w-dim);background:var(--w-2)}
+.wf span{flex:1;min-width:0}
+.wf button{border:1px solid var(--chip-line);background:var(--w-bg);color:var(--w-ink);border-radius:6px;padding:4px 11px;font-size:.76rem;font-weight:500;min-height:30px}
+.wf button:disabled{opacity:.4;cursor:default}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 18px;font-size:.76rem;color:var(--page-muted)}
+.foot a{color:var(--page-ink);text-decoration:none;border-bottom:1px solid var(--page-line)}
+@media(max-width:1020px){.more{grid-template-columns:1fr}.card{order:-1}}
+@media(max-width:900px){.head{grid-template-columns:1fr;gap:8px}}
+@media(max-width:760px){
+  .stages,.thead,.note{display:none}
+  .body{padding:10px 12px 12px;gap:8px}
+  .bar{padding:8px 12px}
+  .bar .who span{display:none}
+  .row{grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:10px 0}
+  .sev{grid-column:1;grid-row:1}
+  .row .gmain{grid-column:1/-1;grid-row:2}
+  .hits{grid-column:2;grid-row:1;justify-self:end}
+  .where{display:none}
+  .more{grid-column:1/-1}
+  .sec h2{font-size:1.05rem}
+  .sec p{display:none}
+}
+@media(max-width:620px){
+  body{padding-top:12px}
+  .page{gap:10px}
+  h1{font-size:1.3rem}
+  .sub{font-size:.86rem;margin-top:4px}
+  .eyebrow{font-size:.74rem;margin-bottom:2px}
+  .now span{font-size:.84rem}
+  .now b{font-size:.92rem}
+  .gt{font-size:.92rem}
+  .gs{font-size:.8rem}
+  .chips{display:none}
+  .fixline{font-size:.82rem;margin-top:6px}
+  .card{padding:10px 11px;gap:6px}
+  .card p{font-size:.82rem}
+  .card h4{font-size:.93rem}
+  .sq i{width:10px;height:10px}
+  .wf{padding:8px 10px}
+  .body{gap:6px}
+  .row{padding:8px 0}
+}
+@media(max-width:380px){h1{font-size:1.22rem}.sub{font-size:.84rem}}
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="head">
+    <div>
+      <p class="eyebrow">Design concept for Plurai · unofficial</p>
+      <h1>Check the passage before you accept the fix</h1>
+      <p class="sub">A Plurai simulation report that asks whether the document a test grades against is still right.</p>
+    </div>
+    <div class="now" id="now" aria-live="polite"></div>
+  </header>
+
+  <section class="window" aria-label="Concept screen in the style of a Plurai simulation report, Gaps stage">
+    <div class="bar"><span class="path">[Made-up] juniper-support-agent › Simulation report › <b>Gaps and fixes</b></span><span class="who"><i class="av">EB</i><span>Elena Brandt, AI engineer</span></span></div>
+    <div class="stages" aria-hidden="true">
+      <div class="st"><b>Scan</b><span>Done</span></div>
+      <div class="st skip"><b>Traces</b><span>Skipped</span></div>
+      <div class="st"><b>Suite</b><span>Done</span></div>
+      <div class="st"><b>Run</b><span>Done</span></div>
+      <div class="st on"><b>Gaps and fixes</b><span>Done</span></div>
+    </div>
+    <div class="body">
+      <div class="sec"><h2>We found 3 gaps in your agent.</h2><p>The gaps the simulation found, and the fixes for them.</p></div>
+      <div>
+        <div class="thead"><span>Severity</span><span>Gap</span><span>Scenarios hit</span><span>Where</span></div>
+        <div class="row">
+          <span class="sev h">HIGH</span>
+          <div class="gmain">
+            <p class="gt">Promises a cash refund the fare rules don’t allow</p>
+            <p class="gs">Failed Answers match the fare rules</p>
+            <div class="chips"><span class="ch s">Spotted in suite</span><span class="ch r">Confirmed in run</span></div>
+            <p class="fixline"><span class="pill">Fix</span><span id="fixtext">Makes the agent offer rebooking or a credit on non-refundable fares, as fare-rules.md says.</span></p>
+          </div>
+          <span class="hits"><span class="sq" aria-hidden="true"><i></i><i></i><i class="f"></i><i></i><i></i><i></i><i></i><i></i></span><span>1 of 8</span></span>
+          <span class="where">prompts.py:31</span>
+          <div class="more">
+            <div class="det">
+              <div><p class="lab">Where it broke</p><p class="scn">#3 · Rosa Delgado, polite and firm<small>Juniper cancelled her flight PHX to ORD on Nov 24 and rebooked her on Nov 25. Basic fare, bought on juniperair.com.</small></p></div>
+              <div><p class="lab">What we saw</p>
+                <div class="turn"><em>turn 3</em><p><b>Rosa</b>The 25th doesn’t work for me, and I don’t want a credit. I just want my money back.</p></div>
+                <div class="turn hit"><em>turn 4</em><p><b>Agent</b>Since we cancelled your flight and you’ve turned down the new one, you’ll get a full refund to your card, bag fee included.</p></div>
+              </div>
+              <div class="exp"><span class="src">Expected · answer in fare-rules.md › Non-refundable fares</span>“Basic and Main fares are non-refundable. If we cancel your flight, we’ll rebook you or give you a travel credit valid for 12 months.”</div>
+            </div>
+            <div id="card"></div>
+          </div>
+        </div>
+        <div class="row">
+          <span class="sev m">MEDIUM</span>
+          <div class="gmain"><p class="gt">Reads a booking back without its date</p><p class="gs">Failed Confirms the details it changed</p></div>
+          <span class="hits"><span class="sq" aria-hidden="true"><i></i><i></i><i></i><i></i><i class="fm"></i><i></i><i></i><i></i></span><span>1 of 8</span></span>
+          <span class="where">agent.py:44</span>
+        </div>
+        <div class="row">
+          <span class="sev m">MEDIUM</span>
+          <div class="gmain"><p class="gt">Asks for the baggage count after it was given</p><p class="gs">Failed Remembers what the user said</p></div>
+          <span class="hits"><span class="sq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i class="fm"></i><i></i></span><span>1 of 8</span></span>
+          <span class="where">tools.py:63</span>
+        </div>
+      </div>
+    </div>
+    <div class="wf"><span>Made-up airline, agent, people and Run</span><button type="button" id="undo">Undo</button><button type="button" id="reset">Start over</button></div>
+  </section>
+
+  <footer class="foot"><span>By Gaurav Basantani · <a href="https://gauravbasantani.com">gauravbasantani.com</a> · <a href="walkthrough.mp4">Watch the 42-second walkthrough</a></span><span>Not affiliated with Plurai. Report labels as described in Plurai’s public docs.</span></footer>
+</main>
+
+<script>
+(function(){
+  var FIX_OLD = "Makes the agent offer rebooking or a credit on non-refundable fares, as fare-rules.md says.";
+  var FIX_SKIP = "Skipped. The agent’s refund answer stays as it is.";
+  var DOC = "fare-rules.md";
+  var S0 = {step:"open", reason:""};
+  var s = clone(S0), hist = [];
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function esc(t){ return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];}); }
+  function go(patch){ hist.push(clone(s)); for (var k in patch) s[k]=patch[k]; render(); }
+  /* saving a form replaces the form step, so Undo goes back to where the person was before opening it */
+  function commit(patch){ var prev = hist.length ? hist.pop() : clone(s); hist.push(prev); for (var k in patch) s[k]=patch[k]; render(); }
+  var card = document.getElementById("card"), now = document.getElementById("now"), fixtext = document.getElementById("fixtext");
+  var head = '<p class="k">Concept · source check</p>';
+  var check = '<h4>Check the passage before you accept</h4>'
+    + '<p>The test grades the agent against ' + DOC + ', last edited Mar 2023. Under the 2024 US refund rule (14 CFR 260.6), if the airline cancels and the passenger turns down the rebooking, the fare is refunded, non-refundable or not.</p>'
+    + '<p class="why"><b>Nothing here allows credit only.</b> Juniper cancelled, Rosa said no to the new flight and to a credit, and it’s a US flight Juniper sold her.</p>';
+
+  function render(){
+    var h = head, n = "", cls = "";
+    fixtext.textContent = FIX_OLD;
+    if (s.step==="open"){
+      h += check + '<div class="btns"><button class="btn fixb" type="button" data-accept>Accept fix</button><button class="btn" type="button" data-skip>Skip fix: agent is right</button></div>';
+      n = '<b>Notice what this fix would teach the agent, and how old the passage is.</b><span>Accept the fix, or skip it with a reason.</span>';
+    }
+    if (s.step==="accepted"){
+      h += '<div class="res"><h5>Fix accepted</h5><p>The agent will offer only rebooking or a credit on these fares, even when Juniper cancels and the passenger says no. A verify Run would call it fixed, because the eval still grades against the 2023 passage.</p><div class="btns"><button class="btn" type="button" data-undo>Undo</button></div></div>';
+      n = '<b>Wrong: this fix makes the agent refuse a refund the US rule requires.</b><span>Rosa turned down the rebooking, so 14 CFR 260.6 says Juniper refunds her fare.</span>'; cls = "bad";
+    }
+    if (s.step==="skipEdit"){
+      h += check + '<div class="form"><label for="rs">Why is the agent right?</label><textarea id="rs" placeholder="For example: the passage is older than the refund rule.">' + esc(s.reason) + '</textarea><span class="hint">At least 10 characters. Your team sees this reason on the gap.</span>'
+        + '<div class="btns"><button class="btn primary" type="button" data-save' + (s.reason.trim().length<10?' disabled':'') + '>Save reason</button><button class="btn" type="button" data-cancel>Cancel</button></div></div>';
+      n = '<b>Write why the agent is right.</b><span>The reason stays with the gap, so the team can see it later.</span>';
+    }
+    if (s.step==="skipped" || s.step==="marked" || s.step==="left"){
+      fixtext.textContent = FIX_SKIP;
+      h += '<div class="chiprow"><span class="chip">Skipped as intended · Elena Brandt</span>' + (s.step==="marked" ? '<span class="chip">Passage out of date</span>' : '') + '</div>';
+      h += '<p>Reason: “' + esc(s.reason) + '”</p>';
+      if (s.step==="skipped"){
+        h += '<div class="form"><span class="fl">The passage still says credit only. Mark it out of date?</span><p class="hint">Until ' + DOC + ' is updated, the next Run grades the same answer the same way.</p>'
+          + '<div class="btns"><button class="btn primary" type="button" data-mark>Mark passage out of date</button><button class="btn" type="button" data-leave>Leave it</button></div></div>';
+        n = '<b>Fixed: the agent keeps its refund answer.</b><span>Next: decide what happens to the old passage.</span>'; cls = "ok";
+      }
+      if (s.step==="marked"){
+        h += '<p>Update the passage in your help center, then rebuild the corpus with <code>/build-rag-corpus</code> so the eval grades against the new text.</p>';
+        n = '<b>Fixed at the source: the passage is out of date, not the agent.</b><span>Customers read ' + DOC + ' too, so it needs the update either way.</span>'; cls = "ok";
+      }
+      if (s.step==="left"){
+        h += '<p>Passage unchanged.</p>';
+        n = '<b>Fixed for this Run.</b><span>The passage still says credit only, so this gap comes back on the next Run.</span>'; cls = "ok";
+      }
+    }
+    card.className = "card"; card.innerHTML = h;
+    if (s.step==="skipEdit" && s.scroll){ var f=card.querySelector(".form"); if (f && f.scrollIntoView) f.scrollIntoView({block:"nearest"}); s.scroll=false; }
+    now.className = "now" + (cls?" "+cls:""); now.innerHTML = n;
+    document.getElementById("undo").disabled = hist.length===0;
+    document.getElementById("reset").disabled = hist.length===0;
+  }
+  function val(id){ var e=document.getElementById(id); return e ? e.value : ""; }
+  card.addEventListener("input", function(e){
+    if (e.target.id==="rs"){ s.reason = e.target.value; var b=card.querySelector("[data-save]"); if(b) b.disabled = e.target.value.trim().length<10; }
+  });
+  card.addEventListener("click", function(e){
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.hasAttribute("data-accept")) go({step:"accepted"});
+    else if (b.hasAttribute("data-skip")) go({step:"skipEdit", scroll:true});
+    else if (b.hasAttribute("data-save")) commit({step:"skipped", reason:val("rs").trim()});
+    else if (b.hasAttribute("data-mark")) go({step:"marked"});
+    else if (b.hasAttribute("data-leave")) go({step:"left"});
+    else if (b.hasAttribute("data-cancel") || b.hasAttribute("data-undo")) undo();
+  });
+  function undo(){ if (!hist.length) return; s = hist.pop(); render(); }
+  document.getElementById("undo").addEventListener("click", undo);
+  document.getElementById("reset").addEventListener("click", function(){ s = clone(S0); hist = []; render(); });
+  render();
+})();
+</script>
+</body>
+</html>
