@@ -266,7 +266,7 @@ h1{font:600 clamp(1.45rem,3vw,2rem)/1.12 var(--sans);letter-spacing:-.02em}
   function commit(patch){ var prev = hist.length ? hist.pop() : clone(s); hist.push(prev); for (var k in patch) s[k]=patch[k]; render(); }
   var card = document.getElementById("card"), now = document.getElementById("now"), fixtext = document.getElementById("fixtext");
   var head = '<p class="k">Concept · source check</p>';
-  var check = '<h4>Check the passage before you accept</h4>'
+  var check = '<h4>This fix would teach the agent a 2023 rule</h4>'
     + '<p>The test grades the agent against ' + DOC + ', last edited Mar 2023. Under the 2024 US refund rule (14 CFR 260.6), if the airline cancels and the passenger turns down the rebooking, the fare is refunded, non-refundable or not.</p>'
     + '<p class="why"><b>Nothing here allows credit only.</b> Juniper cancelled, Rosa said no to the new flight and to a credit, and it’s a US flight Juniper sold her.</p>';
 
